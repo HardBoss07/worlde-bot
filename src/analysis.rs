@@ -1,15 +1,14 @@
 use serde::{Serialize, Deserialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LetterStats {
-    // For each letter, store count per position [0..4]
-    pub counts: HashMap<char, [u32; 5]>,
+    pub counts: BTreeMap<char, [u32; 5]>,
 }
 
 impl LetterStats {
     pub fn new() -> Self {
-        let mut counts = HashMap::new();
+        let mut counts = BTreeMap::new();
 
         // Initialize for a-z
         for ch in 'a'..='z' {
@@ -25,7 +24,7 @@ impl LetterStats {
         for word in words {
             let chars: Vec<char> = word.chars().collect();
             if chars.len() != 5 {
-                continue; // skip invalid words
+                continue; // skip non-5-letter words
             }
 
             for (i, &ch) in chars.iter().enumerate() {

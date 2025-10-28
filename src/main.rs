@@ -3,6 +3,8 @@ mod ranking;
 
 use anyhow::Result;
 use std::fs;
+use analysis::LetterStats;
+use regex::Regex;
 
 fn main() -> Result<()> {
     let args: Vec<String> = std::env::args().collect();
@@ -25,17 +27,31 @@ fn main() -> Result<()> {
 }
 
 fn analyze() -> Result<()> {
-    use analysis::LetterStats;
 
     let content = fs::read_to_string("wordlist.txt")?;
     let words: Vec<&str> = content.lines().collect();
     let stats = LetterStats::from_words(&words);
 
-    fs::write("letter_stats.json", serde_json::to_string_pretty(&stats)?)?;
+    let mut json = serde_json::to_string_pretty(&stats)?;
+
+    //    This regex joins lines between '[' and ']'
+    let re = regex::Regex::new(r"\[\s*((?:\d+,\s*)*\d+)\s*\]").unwrap();
+    json = re
+        .replace_all(&json, |caps: &regex::Captures| {
+            let inner = caps[1]
+                .split_whitespace()
+                .collect::<Vec<_>>()
+                .join(" ");
+            format!("[{}]", inner.replace(", ", ", "))
+        })
+        .to_string();
+
+    fs::write("letter_stats.json", json)?;
     println!("Saved letter stats to letter_stats.json");
 
     Ok(())
 }
+
 
 fn rank() -> Result<()> {
     use ranking::rank_words;
