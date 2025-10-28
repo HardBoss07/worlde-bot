@@ -1,22 +1,28 @@
 mod analysis;
 mod ranking;
+mod solver;
 
 use anyhow::Result;
 use std::fs;
 use analysis::LetterStats;
 use regex::Regex;
+use solver::Solver;
 
 fn main() -> Result<()> {
     let args: Vec<String> = std::env::args().collect();
 
     if args.len() < 2 {
-        eprintln!("Usage: wordle-bot <analyze|rank>");
+        eprintln!("Usage: wordle-bot <analyze|rank|solve>");
         std::process::exit(1);
     }
 
     match args[1].as_str() {
         "analyze" => analyze()?,
         "rank" => rank()?,
+        "solve" => {
+            let mut solver = Solver::new();
+            solver.run()?;
+        }
         _ => {
             eprintln!("Unknown command: {}", args[1]);
             std::process::exit(1);
@@ -27,14 +33,13 @@ fn main() -> Result<()> {
 }
 
 fn analyze() -> Result<()> {
-
     let content = fs::read_to_string("wordlist.txt")?;
     let words: Vec<&str> = content.lines().collect();
     let stats = LetterStats::from_words(&words);
 
     let mut json = serde_json::to_string_pretty(&stats)?;
 
-    //    This regex joins lines between '[' and ']'
+    // This regex joins lines between '[' and ']'
     let re = regex::Regex::new(r"\[\s*((?:\d+,\s*)*\d+)\s*\]").unwrap();
     json = re
         .replace_all(&json, |caps: &regex::Captures| {
@@ -51,7 +56,6 @@ fn analyze() -> Result<()> {
 
     Ok(())
 }
-
 
 fn rank() -> Result<()> {
     use ranking::rank_words;
