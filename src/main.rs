@@ -21,7 +21,7 @@ fn main() -> Result<()> {
         "rank" => rank()?,
         "solve" => {
             let mut solver = Solver::new();
-            solver.run()?;
+            solver?.run()?;
         }
         _ => {
             eprintln!("Unknown command: {}", args[1]);
