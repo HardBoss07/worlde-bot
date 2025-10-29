@@ -4,6 +4,7 @@ use anyhow::Result;
 use serde::{Serialize, Deserialize};
 use std::fs;
 use anyhow::anyhow;
+use crate::ranking::weighted_rank;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CellData {
@@ -136,13 +137,42 @@ impl Solver {
             self.game.print_summary();
 
             // Placeholder for ranking logic
-            println!("(Next best word suggestion goes here...)");
-            self.current_words = self.update_wordlist();
-            println!("Words left: {}\n", self.current_words.len());
+            let stats_json = fs::read_to_string("letter_stats.json")
+                .map_err(|e| anyhow!("Failed to read letter_stats.json: {}", e))?;
+            self.rank_words(&stats_json);
         }
 
         Ok(())
     }
+
+    pub fn rank_words(&mut self, stats_json: &str) -> Result<()> {
+        // Read solver_config.json as Vec of tuples
+        let config_content = fs::read_to_string("solver_config.json")
+            .map_err(|e| anyhow!("Failed to read solver_config.json: {}", e))?;
+
+        let weights: Vec<(f64, f64, f64)> = serde_json::from_str(&config_content)
+            .map_err(|e| anyhow!("Failed to parse solver_config.json: {}", e))?;
+
+        // Select weight set based on number of guesses
+        let attempt = self.game.lines.len().min(weights.len() - 1);
+        let weight_tuple = weights[attempt];
+
+        // Update wordlist
+        self.current_words = self.update_wordlist();
+
+        // Prepare for ranking
+        let word_refs: Vec<&str> = self.current_words.iter().map(|s| s.as_str()).collect();
+        let ranked_words = weighted_rank(&word_refs, stats_json, weight_tuple)?;
+
+        println!("Top suggested words:");
+        for (word, score) in ranked_words.iter().take(10) {
+            println!("{word:<10} {score:.5}");
+        }
+        println!("Total Words Left: {}\n", self.current_words.len());
+
+        Ok(())
+    }
+
 
     pub fn update_wordlist(&self) -> Vec<String> {
         let mut filtered_words = Vec::new();

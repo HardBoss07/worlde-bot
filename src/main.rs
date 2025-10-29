@@ -67,7 +67,7 @@ fn rank() -> Result<()> {
 
     println!("Top 10 words by letter position frequency:");
     for (word, score) in results.iter().take(10) {
-        println!("{word:<10} {score:.2}");
+        println!("{word:<10} {score:.5}");
     }
 
     Ok(())
