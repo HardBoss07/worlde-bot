@@ -1,12 +1,17 @@
 mod analysis;
 mod ranking;
 mod solver;
+mod filter;
+mod game;
 
 use anyhow::Result;
 use std::fs;
 use analysis::LetterStats;
 use regex::Regex;
 use solver::Solver;
+
+// TODO: Add unit tests for edge cases found in docs/Solver.md
+// TODO: Add simulate mode which plays game to caculate average number of guesses
 
 fn main() -> Result<()> {
     let args: Vec<String> = std::env::args().collect();

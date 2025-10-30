@@ -5,76 +5,8 @@ use serde::{Serialize, Deserialize};
 use std::fs;
 use anyhow::anyhow;
 use crate::ranking::weighted_rank;
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CellData {
-    pub letter: char,
-    pub state: char, // 'w' = not in word, 'm' = misplaced, 'c' = correct
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct LineData {
-    pub word: String,
-    pub cells: [CellData; 5],
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GameData {
-    pub lines: Vec<LineData>,
-    pub contains_not: HashSet<char>,
-    pub correct_positions: [Option<char>; 5],
-    pub misplaced_letters: HashMap<usize, HashSet<char>>,
-}
-
-impl GameData {
-    pub fn new() -> Self {
-        Self {
-            lines: Vec::new(),
-            contains_not: HashSet::new(),
-            correct_positions: [None, None, None, None, None],
-            misplaced_letters: HashMap::new(),
-        }
-    }
-
-    pub fn add_line(&mut self, word: &str, pattern: &str) {
-        let mut cells = Vec::new();
-
-        for (i, (ch, state)) in word.chars().zip(pattern.chars()).enumerate() {
-            let cell = CellData { letter: ch, state };
-            cells.push(cell.clone());
-
-            match state {
-                'c' => self.correct_positions[i] = Some(ch),
-                'm' => {
-                    self.misplaced_letters.entry(i).or_default().insert(ch);
-                }
-                'w' => {
-                    if !self.correct_positions.contains(&Some(ch))
-                        && !self.misplaced_letters.values().any(|v| v.contains(&ch))
-                    {
-                        self.contains_not.insert(ch);
-                    }
-                }
-                _ => {}
-            }
-        }
-
-        let cells: [CellData; 5] = cells.try_into().unwrap();
-        self.lines.push(LineData {
-            word: word.to_string(),
-            cells,
-        });
-    }
-
-    pub fn print_summary(&self) {
-        println!("\n=== Current Game State ===");
-        println!("Guesses so far: {}", self.lines.len());
-        println!("Not in word: {:?}", self.contains_not);
-        println!("Correct positions: {:?}", self.correct_positions);
-        println!("Misplaced letters: {:?}", self.misplaced_letters);
-        println!("==========================\n");
-    }
-}
+use crate::filter::Filter;
+use crate::game::{GameData, LineData, CellData};
 
 pub struct Solver {
     game: GameData,
@@ -173,46 +105,8 @@ impl Solver {
         Ok(())
     }
 
-
     pub fn update_wordlist(&self) -> Vec<String> {
-        let mut filtered_words = Vec::new();
-
-        'outer: for word in &self.current_words {
-            let chars: Vec<char> = word.chars().collect();
-
-            // 1. Skip words containing forbidden letters
-            for ch in &chars {
-                if self.game.contains_not.contains(ch) {
-                    continue 'outer;
-                }
-            }
-
-            // 2. Skip words that don't have correct letters in correct positions
-            for (i, correct_opt) in self.game.correct_positions.iter().enumerate() {
-                if let Some(expected) = correct_opt {
-                    if chars[i] != *expected {
-                        continue 'outer;
-                    }
-                }
-            }
-
-            // 3. Skip words that violate misplaced letter rules
-            for (pos, misplaced_set) in &self.game.misplaced_letters {
-                for &m in misplaced_set {
-                    // Rule 1: letter m must NOT appear in this position
-                    if chars[*pos] == m {
-                        continue 'outer;
-                    }
-                    // Rule 2: letter m must appear somewhere else in the word
-                    if !chars.contains(&m) {
-                        continue 'outer;
-                    }
-                }
-            }
-
-            filtered_words.push(word.clone());
-        }
-
-        filtered_words
+        let filter = Filter::new(&self.game, &self.current_words);
+        filter.filter_words()
     }
 }
