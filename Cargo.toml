@@ -2,6 +2,11 @@
 name = "worlde-bot"
 version = "0.1.0"
 edition = "2021"
+description = "Full CLI Implementation of the popular game Wordle with an included Solver"
+repository = "https://github.com/HardBoss07/worlde-bot"
+license = "AGPL-3.0-only"
+keywords = ["worlde", "solver", "game", "puzzle"]
+categories = ["command-line-utilities", "game"]
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }

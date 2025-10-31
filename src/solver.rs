@@ -1,12 +1,10 @@
-use std::collections::{HashMap, HashSet};
 use std::io::{self, Write};
 use anyhow::Result;
-use serde::{Serialize, Deserialize};
 use std::fs;
 use anyhow::anyhow;
 use crate::ranking::weighted_rank;
 use crate::filter::Filter;
-use crate::game::{GameData, LineData, CellData};
+use crate::game::GameData;
 
 pub struct Solver {
     game: GameData,
