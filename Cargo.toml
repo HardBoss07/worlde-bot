@@ -1,6 +1,6 @@
 [package]
 name = "worlde-bot"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 description = "Full CLI Implementation of the popular game Wordle with an included Solver"
 repository = "https://github.com/HardBoss07/worlde-bot"
