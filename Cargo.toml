@@ -7,6 +7,7 @@ repository = "https://github.com/HardBoss07/worlde-bot"
 license = "AGPL-3.0-only"
 keywords = ["worlde", "solver", "game", "puzzle"]
 categories = ["command-line-utilities", "games"]
+readme = "README.md"
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
