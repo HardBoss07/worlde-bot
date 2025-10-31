@@ -7,9 +7,9 @@ pub fn rank_words<'a>(words: &[&'a str], stats_json: &str) -> Result<Vec<(String
     let stats: LetterStats = serde_json::from_str(stats_json)?;
 
     // === Adjustable weight parameters ===
-    let w_pos = 0.1;      // weight for positional frequency
+    let w_pos = 0.2;      // weight for positional frequency
     let w_overall = 0.1;  // weight for overall frequency
-    let w_unique = 0.8;   // weight for letter uniqueness
+    let w_unique = 0.7;   // weight for letter uniqueness
 
     weighted_rank(words, stats_json, (w_pos, w_overall, w_unique))
 }

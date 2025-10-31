@@ -33,6 +33,17 @@ impl Solver {
     }
 
     pub fn run(&mut self) -> Result<()> {
+        use crate::ranking::rank_words;
+        let stats_json = fs::read_to_string("letter_stats.json")?;
+        let word_refs: Vec<&str> = self.current_words.iter().map(|s| s.as_str()).collect();
+        let start_results = rank_words(&word_refs, &stats_json)?;
+
+
+        println!("Top 10 words by letter position frequency:");
+        for (word, score) in start_results.iter().take(10) {
+            println!("{word:<10} {score:.5}");
+        }
+
         loop {
             // Step 1: enter word
             print!("Enter your 5-letter guess (or 'exit'): ");
