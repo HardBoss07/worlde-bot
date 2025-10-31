@@ -6,7 +6,7 @@ description = "Full CLI Implementation of the popular game Wordle with an includ
 repository = "https://github.com/HardBoss07/worlde-bot"
 license = "AGPL-3.0-only"
 keywords = ["worlde", "solver", "game", "puzzle"]
-categories = ["command-line-utilities", "game"]
+categories = ["command-line-utilities", "games"]
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
