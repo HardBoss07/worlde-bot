@@ -27,14 +27,14 @@ This happens since the wordlist word remover misses certain words because the mi
 - `s` doesn’t appear at position 4 (ok)
 
 ### Number 2:
-> This edge case hasn't been solved
+> This edge case has been solved
 
 | No. | Word  | Pattern |
 | --- | ----- | ------- |
 | 1.  | salet | wcmmm   |
 | 2.  | table | mcwmc   |
 
-Goal Word was: Lathe
+Goal Word was: lathe
 
 After entering first word:
 
@@ -51,6 +51,41 @@ After entering second word:
 - Total Words Left: 0
 
 This happens because the wordlist filter is too strict.
+
+### Number 3:
+
+> This edge case has been solved.
+
+| No. | Word  | Pattern |
+| --- | ----- | ------- |
+| 1.  | salet | wmwww   |
+| 2.  | moray | wmmmw   |
+| 3.  | aroid | cmmww   |
+
+Output after 2nd word input:
+Top suggested words:
+aroid      0.43935
+krona      0.43558
+rioja      0.43544
+draco      0.43453
+orgia      0.43452
+orang      0.43390
+adorn      0.43376
+argon      0.43376
+acorn      0.43363
+abord      0.43309
+Total Words Left: 24
+
+Output after 3rd word input:
+Top suggested words:
+Total Words Left: 0
+
+The word to be found was abhor and i've gotten this with these further inputs (not in the actual solver):
+
+| No. | Word  | Pattern |
+| --- | ----- | ------- |
+| 4.  | birch | mwmwm   |
+| 5.  | abhor | ccccc   |
 
 ## Structs
 

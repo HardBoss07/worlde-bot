@@ -1,6 +1,5 @@
-use std::collections::{HashSet, HashMap};
-
-use crate::game::GameData; // assuming GameData is defined in game.rs
+use std::collections::HashSet;
+use crate::game::GameData;
 
 pub struct Filter<'a> {
     game: &'a GameData,
@@ -12,35 +11,33 @@ impl<'a> Filter<'a> {
         Self { game, words }
     }
 
-    /// Entry point: runs all filtering steps and returns the valid words
     pub fn filter_words(&self) -> Vec<String> {
         self.words
             .iter()
             .filter(|word| {
                 let chars: Vec<char> = word.chars().collect();
 
-                self.has_no_forbidden_letters(&chars)
+                self.not_strictly_forbidden(&chars)
                     && self.matches_correct_positions(&chars)
-                    && self.matches_misplaced_constraints(&chars)
+                    && self.respects_misplaced_constraints(&chars)
+                    && self.contains_required_letters(&chars)
             })
             .cloned()
             .collect()
     }
 
-    /// Step 1: Reject words containing forbidden letters
-    fn has_no_forbidden_letters(&self, chars: &[char]) -> bool {
+    fn not_strictly_forbidden(&self, chars: &[char]) -> bool {
         for ch in chars {
-            if self.game.contains_not.contains(ch) {
+            if self.game.contains_not.contains(ch) && !self.game.must_contain.contains(ch) {
                 return false;
             }
         }
         true
     }
 
-    /// Step 2: Enforce correct-position matches
     fn matches_correct_positions(&self, chars: &[char]) -> bool {
-        for (i, correct_opt) in self.game.correct_positions.iter().enumerate() {
-            if let Some(expected) = correct_opt {
+        for (i, maybe_correct) in self.game.correct_positions.iter().enumerate() {
+            if let Some(expected) = maybe_correct {
                 if chars[i] != *expected {
                     return false;
                 }
@@ -49,42 +46,27 @@ impl<'a> Filter<'a> {
         true
     }
 
-    /// Step 3: Enforce misplaced letter constraints
-    fn matches_misplaced_constraints(&self, chars: &[char]) -> bool {
-        for (pos, misplaced_set) in &self.game.misplaced_letters {
-            for &m in misplaced_set {
-                // 3.1: misplaced letter cannot be at that position
-                if chars[*pos] == m {
+    fn respects_misplaced_constraints(&self, chars: &[char]) -> bool {
+        for (pos, letters) in &self.game.misplaced_letters {
+            for &letter in letters {
+                if chars[*pos] == letter {
                     return false;
                 }
-
-                // 3.2: must appear elsewhere in the word
-                let mut found_elsewhere = false;
-                for (i, &c) in chars.iter().enumerate() {
-                    if c == m {
-                        // skip banned position
-                        if i == *pos {
-                            continue;
-                        }
-
-                        // skip position if it’s already a confirmed correct position
-                        if let Some(correct_ch) = self.game.correct_positions[i] {
-                            if correct_ch == m {
-                                continue;
-                            }
-                        }
-
-                        found_elsewhere = true;
-                        break;
-                    }
-                }
-
-                if !found_elsewhere {
+                if !chars.contains(&letter) {
                     return false;
                 }
             }
         }
+        true
+    }
 
+    fn contains_required_letters(&self, chars: &[char]) -> bool {
+        let present: HashSet<char> = chars.iter().copied().collect();
+        for &req in &self.game.must_contain {
+            if !present.contains(&req) {
+                return false;
+            }
+        }
         true
     }
 }

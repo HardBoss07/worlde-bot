@@ -4,7 +4,7 @@ use serde::{Serialize, Deserialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CellData {
     pub letter: char,
-    pub state: char, // 'w' = not in word, 'm' = misplaced, 'c' = correct
+    pub state: char,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -19,6 +19,7 @@ pub struct GameData {
     pub contains_not: HashSet<char>,
     pub correct_positions: [Option<char>; 5],
     pub misplaced_letters: HashMap<usize, HashSet<char>>,
+    pub must_contain: HashSet<char>,
 }
 
 impl GameData {
@@ -28,6 +29,7 @@ impl GameData {
             contains_not: HashSet::new(),
             correct_positions: [None, None, None, None, None],
             misplaced_letters: HashMap::new(),
+            must_contain: HashSet::new(),
         }
     }
 
@@ -35,18 +37,19 @@ impl GameData {
         let mut cells = Vec::new();
 
         for (i, (ch, state)) in word.chars().zip(pattern.chars()).enumerate() {
-            let cell = CellData { letter: ch, state };
-            cells.push(cell.clone());
+            cells.push(CellData { letter: ch, state });
 
             match state {
-                'c' => self.correct_positions[i] = Some(ch),
+                'c' => {
+                    self.correct_positions[i] = Some(ch);
+                    self.must_contain.insert(ch);
+                }
                 'm' => {
                     self.misplaced_letters.entry(i).or_default().insert(ch);
+                    self.must_contain.insert(ch);
                 }
                 'w' => {
-                    if !self.correct_positions.contains(&Some(ch))
-                        && !self.misplaced_letters.values().any(|v| v.contains(&ch))
-                    {
+                    if !self.must_contain.contains(&ch) {
                         self.contains_not.insert(ch);
                     }
                 }
@@ -54,7 +57,7 @@ impl GameData {
             }
         }
 
-        let cells: [CellData; 5] = cells.try_into().unwrap();
+        let cells: [CellData; 5] = cells.try_into().expect("must be 5 letters");
         self.lines.push(LineData {
             word: word.to_string(),
             cells,
@@ -63,10 +66,11 @@ impl GameData {
 
     pub fn print_summary(&self) {
         println!("\n=== Current Game State ===");
-        println!("Guesses so far: {}", self.lines.len());
+        println!("Guesses: {}", self.lines.len());
         println!("Not in word: {:?}", self.contains_not);
         println!("Correct positions: {:?}", self.correct_positions);
         println!("Misplaced letters: {:?}", self.misplaced_letters);
+        println!("Must contain: {:?}", self.must_contain);
         println!("==========================\n");
     }
 }
