@@ -73,4 +73,12 @@ impl GameData {
         println!("Must contain: {:?}", self.must_contain);
         println!("==========================\n");
     }
+
+    pub fn reset(&mut self) {
+        self.lines.clear();
+        self.contains_not.clear();
+        self.correct_positions = [None, None, None, None, None];
+        self.misplaced_letters.clear();
+        self.must_contain.clear();
+    }
 }
