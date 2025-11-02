@@ -3,6 +3,7 @@ mod ranking;
 mod solver;
 mod filter;
 mod game;
+mod play;
 
 use anyhow::Result;
 use std::fs;
