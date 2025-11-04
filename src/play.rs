@@ -1,7 +1,9 @@
 use std::fs;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
+use rand::prelude::IndexedRandom;
 use crate::game::{GameData, CellData, LineData};
+use std::collections::HashMap;
 
 pub struct Play {
     word: String,
