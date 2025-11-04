@@ -9,6 +9,7 @@ use anyhow::Result;
 use std::fs;
 use analysis::LetterStats;
 use solver::Solver;
+use play::Play;
 
 // TODO: Add simulate mode which plays game to caculate average number of guesses
 
@@ -23,15 +24,27 @@ fn main() -> Result<()> {
     match args[1].as_str() {
         "analyze" => analyze()?,
         "rank" => rank()?,
-        "solve" => {
-            let solver = Solver::new();
-            solver?.run()?;
-        }
+        "solve" => solve()?,
+        "play" => play()?,
         _ => {
             eprintln!("Unknown command: {}", args[1]);
             std::process::exit(1);
         }
     }
+
+    Ok(())
+}
+
+fn play() -> Result<()> {
+    let mut play = Play::new();
+    play.run()?;
+
+    Ok(())
+}
+
+fn solve() -> Result<()> {
+    let solver = Solver::new();
+    solver?.run()?;
 
     Ok(())
 }

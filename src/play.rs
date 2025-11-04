@@ -4,11 +4,14 @@ use rand::thread_rng;
 use rand::prelude::IndexedRandom;
 use crate::game::{GameData, CellData, LineData};
 use std::collections::HashMap;
+use anyhow::Result;
+use std::io;
 
 pub struct Play {
     word: String,
     num_guesses: usize,
     game_data: GameData,
+    wordlist: Vec<String>,
 }
 
 impl Play {
@@ -26,10 +29,20 @@ impl Play {
             .expect("No words available")
             .to_lowercase();
 
+        let content = fs::read_to_string("wordlist.txt")
+            .expect("Failed to read wordlist.txt");
+
+        let words: Vec<String> = content
+            .lines()
+            .map(|w| w.trim().to_lowercase())
+            .filter(|w| w.len() == 5)
+            .collect();
+
         Self {
             word: random_word,
             num_guesses: 6,
             game_data: GameData::new(),
+            wordlist: words,
         }
     }
 
@@ -86,5 +99,69 @@ impl Play {
             word: guessed_word.to_string(),
             cells: result_cells,
         }
+    }
+
+    pub fn run(&mut self) -> Result<()> {
+        self.print_summary();
+        self.add_line();
+        self.print_summary();
+        println!("{}", self.word);
+        Ok(())
+    }
+
+    fn add_line(&mut self) {
+        loop {
+            println!("Enter your guess:");
+
+            let mut input = String::new();
+            if io::stdin().read_line(&mut input).is_err() {
+                println!("Failed to read input. Try again.");
+                continue;
+            }
+
+            // Remove all whitespace and lowercase
+            let cleaned: String = input.chars()
+                .filter(|c| !c.is_whitespace())
+                .collect::<String>()
+                .to_lowercase();
+
+            // Take only the first 5 letters
+            let word: String = cleaned.chars().take(5).collect();
+
+            if word.len() < 5 {
+                println!("Word must be 5 letters long!");
+                continue;
+            }
+
+            // Check against the wordlist in the struct
+            if !self.wordlist.contains(&word) {
+                println!("Word not in the allowed word list!");
+                continue;
+            }
+
+            // Valid word, process it
+            let line = self.evaluate_word(&word);
+            let pattern = self.get_pattern(&line);
+
+            self.game_data.add_line(&word, &pattern);
+            break;
+        }
+    }
+
+    fn print_summary(&self) {
+        println!("\n=== Current Game State ===");
+        for (number, line) in self.game_data.lines.iter().enumerate() {
+            println!("{}. {}    {}", number + 1, line.word, self.get_pattern(line));
+        }
+        println!("==========================\n");
+    }
+
+    fn get_pattern(&self, line: &LineData) -> String {
+        line.cells.iter().map(|cell| cell.state).collect()
+    }
+
+    fn reset(&mut self) {
+        self.word = String::new();
+        self.game_data.reset()
     }
 }
