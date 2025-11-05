@@ -24,19 +24,6 @@ pub enum GameResult {
 
 impl Play {
     pub fn new() -> Self {
-        let allowed_words: Vec<String> = fs::read_to_string("wordlist.txt")
-            .expect("Failed to read wordlist.txt")
-            .lines()
-            .skip(10657) // Skip to guess list
-            .map(|line| line.trim().to_string())
-            .collect();
-
-        let mut rng = thread_rng();
-        let random_word = allowed_words
-            .choose(&mut rng)
-            .expect("No words available")
-            .to_lowercase();
-
         let content = fs::read_to_string("wordlist.txt")
             .expect("Failed to read wordlist.txt");
 
@@ -45,6 +32,14 @@ impl Play {
             .map(|w| w.trim().to_lowercase())
             .filter(|w| w.len() == 5)
             .collect();
+
+        let allowed_words = &words[10657..];
+
+        let mut rng = thread_rng();
+        let random_word = allowed_words
+            .choose(&mut rng)
+            .expect("No words available")
+            .clone();
 
         Self {
             word: random_word,
@@ -117,7 +112,6 @@ impl Play {
             self.print_summary();
             self.add_line();
 
-            // Check for win condition
             if let Some(last_line) = self.game_data.lines.last() {
                 if last_line.word == self.word {
                     self.result = GameResult::Win;
@@ -129,8 +123,12 @@ impl Play {
                 self.result = GameResult::Lose;
                 break;
             }
+
             attempts += 1;
         }
+
+        self.print_summary();
+
         match self.result {
             GameResult::Win => {
                 println!("Congratulations! You've guessed the word: {}", self.word);
@@ -140,6 +138,7 @@ impl Play {
             }
             GameResult::Ongoing => {}
         }
+
         Ok(())
     }
 
@@ -184,9 +183,24 @@ impl Play {
 
     fn print_summary(&self) {
         println!("\n=== Current Game State ===");
-        println!("Nr.  Word   Pattern");
+        println!("Nr.  Word");
+
         for (number, line) in self.game_data.lines.iter().enumerate() {
-            println!("{}.   {}  {}", number + 1, line.word, self.get_pattern(line));
+            print!("{}.   ", number + 1);
+
+            for cell in &line.cells {
+                let letter = cell.letter.to_ascii_uppercase();
+
+                let color = match cell.state {
+                    'c' => "\x1b[42m\x1b[30m",  // green background, black text
+                    'm' => "\x1b[43m\x1b[30m",  // yellow background, black text
+                    'w' => "\x1b[100m\x1b[37m", // gray background, white text
+                    _ => "\x1b[0m",
+                };
+
+                print!("{} {} \x1b[0m", color, letter);
+            }
+            println!();
         }
         println!("==========================\n");
     }
