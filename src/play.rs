@@ -12,6 +12,14 @@ pub struct Play {
     num_guesses: usize,
     game_data: GameData,
     wordlist: Vec<String>,
+    result: GameResult,
+}
+
+#[derive(PartialEq, Debug)]
+pub enum GameResult {
+    Win,
+    Lose,
+    Ongoing,
 }
 
 impl Play {
@@ -43,6 +51,7 @@ impl Play {
             num_guesses: 6,
             game_data: GameData::new(),
             wordlist: words,
+            result: GameResult::Ongoing,
         }
     }
 
@@ -102,10 +111,35 @@ impl Play {
     }
 
     pub fn run(&mut self) -> Result<()> {
-        self.print_summary();
-        self.add_line();
-        self.print_summary();
-        println!("{}", self.word);
+        let mut attempts = 0;
+
+        while attempts < self.num_guesses && self.result == GameResult::Ongoing {
+            self.print_summary();
+            self.add_line();
+
+            // Check for win condition
+            if let Some(last_line) = self.game_data.lines.last() {
+                if last_line.word == self.word {
+                    self.result = GameResult::Win;
+                    break;
+                }
+            }
+
+            if attempts == self.num_guesses - 1 {
+                self.result = GameResult::Lose;
+                break;
+            }
+            attempts += 1;
+        }
+        match self.result {
+            GameResult::Win => {
+                println!("Congratulations! You've guessed the word: {}", self.word);
+            }
+            GameResult::Lose => {
+                println!("Game Over! The correct word was: {}", self.word);
+            }
+            GameResult::Ongoing => {}
+        }
         Ok(())
     }
 
@@ -150,8 +184,9 @@ impl Play {
 
     fn print_summary(&self) {
         println!("\n=== Current Game State ===");
+        println!("Nr.  Word   Pattern");
         for (number, line) in self.game_data.lines.iter().enumerate() {
-            println!("{}. {}    {}", number + 1, line.word, self.get_pattern(line));
+            println!("{}.   {}  {}", number + 1, line.word, self.get_pattern(line));
         }
         println!("==========================\n");
     }
