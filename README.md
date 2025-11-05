@@ -1,59 +1,74 @@
 # wordle-bot
 
-A command-line Rust bot for analyzing, ranking, and solving Wordle puzzles.
-It provides detailed letter statistics, ranks words based on frequency and position, and can simulate solving games.
+A command-line Rust bot for analyzing, ranking, solving, and playing Wordle puzzles.  
+It provides detailed letter statistics, ranks words based on frequency and position, simulates solver strategies, and includes an interactive game mode.
 
 ## Features
 
 * **Analyze**: Generate letter statistics from a word list (`letter_stats.json`).
 * **Rank**: Rank words by letter frequency and positional value.
 * **Solve**: Solve Wordle puzzles using a frequency-based algorithm with adjustable weighting.
-* Fully written in Rust, with a modular design (`analysis`, `ranking`, `solver`, `filter`, `game`).
+* **Play**: Play an interactive Wordle game directly in the terminal.
+* Fully written in Rust, with a modular design (`analysis`, `ranking`, `solver`, `filter`, `game`, `play`).
 
 ## Installation
 
 ### From crates.io
 
 ```bash
-cargo install worlde-bot
-```
+cargo install wordle-bot
+````
 
 ### From source (GitHub)
 
 ```bash
-git clone https://github.com/yourusername/worlde-bot.git
-cd worlde-bot
+git clone https://github.com/yourusername/wordle-bot.git
+cd wordle-bot
 cargo build --release
 ```
 
 ## Usage
 
 ```bash
-wordle-bot <analyze|rank|solve>
+wordle-bot <analyze|rank|solve|play>
 ```
 
 ### Commands
 
-* **analyze**
-  Generates `letter_stats.json` from `wordlist.txt`, containing frequency and positional statistics for all letters.
+#### **analyze**
 
-* **rank**
-  Ranks all words in `wordlist.txt` using the precomputed letter statistics. Outputs the top 10 words.
+Generates `letter_stats.json` from `wordlist.txt`, containing frequency and positional statistics for all letters.
 
-* **solve**
-  Runs the interactive solver module. You can enter guesses and feedback (`w`, `m`, `c`) to progressively narrow down possible words.
+#### **rank**
 
-## Example
+Ranks all words in `wordlist.txt` using the precomputed letter statistics.
+Outputs the top-ranked words based on configurable weighting.
+
+#### **solve**
+
+Runs the automated solver module.
+You can enter guesses and feedback (`w`, `m`, `c`) to progressively narrow down possible words.
+
+#### **play**
+
+Starts an interactive Wordle game in your terminal.
+The bot selects a random word from the word list, and you have six guesses to find it.
+Each guess displays feedback in a color-coded grid (e.g. green = correct position, yellow = correct letter, gray = absent).
 
 ```bash
-# Analyze letter statistics
-wordle-bot analyze
+wordle-bot play
+```
 
-# Rank words
-wordle-bot rank
+Example session:
 
-# Solve a puzzle
-wordle-bot solve
+```
+=== Current Game State ===
+Nr.  Word
+1.   C  R  A  N  E
+2.   S  T  O  N  E
+==========================
+
+Congratulations! You've guessed the word: STONE
 ```
 
 ## Tweaking the Solver (`solver_config.json`)
@@ -90,14 +105,14 @@ Each entry corresponds to a turn number:
 To tweak solver behavior:
 
 1. Open `solver_config.json`.
-2. Adjust the numbers (they must sum roughly to 1.0, but it's not required).
+2. Adjust the numbers (they should roughly sum to 1.0, but it's not required).
 3. Run the solver again — it automatically reloads the new weights each turn.
 
 ### Tips
 
 * Increase `w_unique` for early-game exploration.
 * Increase `w_pos` and `w_overall` for late-game precision.
-* You can define more entries if you want to simulate longer games (e.g., 7th or 8th guesses).
+* You can define more entries for longer simulations (e.g., 7th or 8th guesses).
 
 ## Project Structure
 
@@ -107,7 +122,8 @@ src/
 ├── ranking.rs    # Word ranking logic
 ├── solver.rs     # Wordle solving logic
 ├── filter.rs     # Word filtering logic
-├── game.rs       # Game management and simulation
+├── game.rs       # Game management and state
+├── play.rs       # Interactive game mode
 └── main.rs       # CLI entry point
 ```
 
@@ -118,9 +134,3 @@ src/
 ## License
 
 AGPL-3.0 (see [LICENSE](LICENSE))
-
-## Notes / TODO
-
-* Add a simulate mode to run games automatically and calculate average guesses.
-* Improve solver algorithm for optimal guess selection.
-* Potential future CLI options for custom wordlists or game modes.
