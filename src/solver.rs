@@ -77,6 +77,13 @@ impl Solver {
             // Show summary
             self.game.print_summary();
 
+            // Break if Game Won
+            if self.is_game_won() {
+                let word = self.get_solved_word().unwrap();
+                println!("Congratulations! You've solved the puzzle! The word is '{}'.", word);
+                break;
+            }
+
             // Placeholder for ranking logic
             let stats_json = fs::read_to_string("letter_stats.json")
                 .map_err(|e| anyhow!("Failed to read letter_stats.json: {}", e))?;
@@ -117,5 +124,23 @@ impl Solver {
     pub fn update_wordlist(&self) -> Vec<String> {
         let filter = Filter::new(&self.game, &self.current_words);
         filter.filter_words()
+    }
+
+    fn is_game_won(&self) -> bool {
+        self.game.correct_positions.iter().all(|&pos| pos.is_some())
+    }
+
+    fn get_solved_word(&self) -> Option<String> {
+        if self.is_game_won() {
+            Some(
+                self.game
+                    .correct_positions
+                    .iter()
+                    .map(|&c| c.unwrap())
+                    .collect(),
+            )
+        } else {
+            None
+        }
     }
 }
