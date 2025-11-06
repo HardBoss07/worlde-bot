@@ -9,6 +9,7 @@ use crate::game::GameData;
 pub struct Solver {
     game: GameData,
     current_words: Vec<String>,
+    all_words: Vec<String>,
 }
 
 impl Solver {
@@ -28,7 +29,8 @@ impl Solver {
 
         Ok(Self {
             game: GameData::new(),
-            current_words: words,
+            current_words: words.clone(),   // filtered, may shrink during filtering
+            all_words: words,               // full list stays available for checking
         })
     }
 
@@ -37,7 +39,6 @@ impl Solver {
         let stats_json = fs::read_to_string("letter_stats.json")?;
         let word_refs: Vec<&str> = self.current_words.iter().map(|s| s.as_str()).collect();
         let start_results = rank_words(&word_refs, &stats_json)?;
-
 
         println!("Top 10 words by letter position frequency:");
         for (word, score) in start_results.iter().take(10) {
@@ -51,6 +52,7 @@ impl Solver {
             let mut word = String::new();
             io::stdin().read_line(&mut word)?;
             let word = word.trim().to_lowercase();
+
             if word == "exit" {
                 println!("Exiting solver.");
                 break;
@@ -60,12 +62,19 @@ impl Solver {
                 continue;
             }
 
+            // Check if guess exists in wordlist (uses preloaded all_words)
+            if !self.all_words.contains(&word) {
+                println!("'{}' is not in the wordlist.\n", word);
+                continue;
+            }
+
             // Step 2: enter pattern
             print!("Enter pattern (w = wrong, m = misplaced, c = correct): ");
             io::stdout().flush()?;
             let mut pattern = String::new();
             io::stdin().read_line(&mut pattern)?;
             let pattern = pattern.trim().to_lowercase();
+
             if pattern.len() != 5 || !pattern.chars().all(|c| "wmc".contains(c)) {
                 println!("Invalid pattern. Use only w, m, c.\n");
                 continue;
@@ -84,10 +93,10 @@ impl Solver {
                 break;
             }
 
-            // Placeholder for ranking logic
+            // Update suggestions
             let stats_json = fs::read_to_string("letter_stats.json")
                 .map_err(|e| anyhow!("Failed to read letter_stats.json: {}", e))?;
-            self.rank_words(&stats_json);
+            self.rank_words(&stats_json)?;
         }
 
         Ok(())
@@ -105,7 +114,7 @@ impl Solver {
         let attempt = self.game.lines.len().min(weights.len() - 1);
         let weight_tuple = weights[attempt];
 
-        // Update wordlist
+        // Update wordlist (filtered)
         self.current_words = self.update_wordlist();
 
         // Prepare for ranking
