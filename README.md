@@ -3,6 +3,8 @@
 A command-line Rust bot for analyzing, ranking, solving, and playing Wordle puzzles.  
 It provides detailed letter statistics, ranks words based on frequency and position, simulates solver strategies, and includes an interactive game mode.
 
+With a minor self test of 50 games I averaged 4.42 guesses per game with 0 missed words. This data may not be accurate nor guarenteed.
+
 ## Features
 
 * **Analyze**: Generate letter statistics from a word list (`letter_stats.json`).
